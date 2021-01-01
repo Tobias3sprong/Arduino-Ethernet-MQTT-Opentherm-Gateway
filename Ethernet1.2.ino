@@ -38,13 +38,11 @@ PubSubClient client(ethClient);
 unsigned long response = ot.setBoilerStatus(enableCentralHeating);
 
 void mqttConnected() {
-  Serial.println("Connected to MQTT");
   client.subscribe("Opentherm/settings/setpoint");
   client.subscribe("Opentherm/settings/heating");
 }
 
 boolean reconnect() {
-  Serial.println("Trying to (re)connect to MQTT");
   // MQTT reconnection function
 
   // Create a random client ID
@@ -88,7 +86,6 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void setup() {
-  Serial.begin(9600);
   // start the Ethernet connection:
   Ethernet.begin(mac);
   // give the Ethernet shield a second to initialize:
@@ -107,8 +104,7 @@ void Opentherm() {
   unsigned int dataCHPressure = 0xFFFF;
   response = ot.setBoilerStatus(enableCentralHeating);
   String messageJson = "{\"isFlameOn\": " + String(ot.isFlameOn(response)) + ",\"isCentralHeatingEnabled\": " + String(ot.isCentralHeatingEnabled(response)) + ",\"isFault\": \"" + String(ot.isFault(response)) + "\", \"controlSetpoint\": " + String(setpoint) + ", \"CHPressure\": " + String((ot.sendRequest(ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::CHPressure, dataCHPressure)) & 0xFFFF) / 256.0) + ", \"relModLevel\": " + String((ot.sendRequest(ot.buildRequest(OpenThermRequestType::READ, OpenThermMessageID::RelModLevel, dataRelModLevel)) & 0xFFFF) / 256.0) + ", \"boilerTemperature\": " + String(ot.getBoilerTemperature()) + "}";
-  Serial.println(messageJson);
-  Serial.print(client.publish("Opentherm/status", messageJson.c_str()));
+  client.publish("Opentherm/status", messageJson.c_str());
 }
 
 
@@ -135,10 +131,6 @@ void loop() {
       lastCom = now;
       ot.setBoilerTemperature(setpoint);
       response = ot.setBoilerStatus(enableCentralHeating);
-      Serial.print("Setpoint: ");
-      Serial.print(setpoint);
-      Serial.print(" CH: ");
-      Serial.println(ot.isCentralHeatingEnabled(response));
     }
 
     if (now - lastCallback > 60000) {
